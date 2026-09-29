@@ -1,12 +1,165 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<!--
+  GERONIMO: intro screen + login
+  Keep index.html and geronimo.jpg together (same folder / repo root).
+
+  ONE-TIME LOGIN SETUP (free, about 5 minutes).
+  A static website can't check passwords by itself, so sign-in uses Firebase Authentication:
+   1. Go to console.firebase.google.com and add a project.
+   2. Build > Authentication > Get started > Sign-in method > turn on Email/Password.
+   3. Authentication > Settings > Authorized domains > add your GitHub address (e.g. yourname.github.io).
+   4. Project settings > Your apps > Web (</>) > register, then copy the values into FIREBASE_CONFIG below.
+  These config values are safe to be public. Never put secret keys (like your Gemini key) in this file.
+-->
+<html lang="en">
 <head>
-  <title>My AI Website</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geronimo</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%AF%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--cosmos:#0b0817;--moon:#efe2c6;--aurora:#86b7ff;--glass:rgba(11,8,23,.68);--edge:rgba(239,226,198,.2);--err:#ffb4a8}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fixed;color:var(--moon);font:400 16px/1.5 Montserrat,system-ui,sans-serif;overflow:hidden}
+
+/* The artwork is the first thing seen; it softens when the login appears. */
+#art{position:fixed;inset:0;background:url(geronimo.jpg) center/cover no-repeat;transition:transform 1.2s ease,filter 1.2s ease}
+@media (max-aspect-ratio:1/1){#art{background-size:100% auto}}
+body:not([data-state=splash]) #art{transform:scale(1.04);filter:blur(6px) brightness(.55)}
+
+#hint{position:fixed;left:0;right:0;bottom:8vh;margin:0;text-align:center;font-weight:300;letter-spacing:.12em;opacity:0;transition:opacity .6s;animation:breathe 3.6s ease-in-out infinite}
+body[data-state=splash] #hint{opacity:.85}
+@keyframes breathe{50%{text-shadow:0 0 18px var(--aurora)}}
+
+.panel{position:fixed;inset:0;display:grid;place-items:center;padding:20px;overflow:auto;opacity:0;visibility:hidden;transition:opacity .6s,visibility .6s}
+body[data-state=login] #login,body[data-state=in] #welcome{opacity:1;visibility:visible}
+.card{width:min(390px,100%);padding:34px 30px 26px;border:1px solid var(--edge);border-radius:20px;background:var(--glass);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 0 80px rgba(134,183,255,.12)}
+h1{margin:0 0 6px;font-weight:300;font-size:1.7rem;letter-spacing:.03em}
+.sub{margin:0 0 22px;font-size:.9rem;opacity:.75}
+label{display:block;margin:0 0 14px;font-size:.85rem;font-weight:500}
+input{display:block;width:100%;margin-top:6px;padding:12px 14px;font:inherit;color:var(--moon);background:rgba(255,255,255,.06);border:1px solid var(--edge);border-radius:10px}
+input:focus{outline:2px solid var(--aurora);outline-offset:1px;border-color:transparent}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+.go{width:100%;margin-top:6px;padding:12px;font-weight:500;color:var(--cosmos);background:var(--moon);border:0;border-radius:10px;transition:box-shadow .3s}
+.go:hover{box-shadow:0 0 24px rgba(239,226,198,.45)}
+.go:disabled{opacity:.6;cursor:wait}
+.link{display:block;margin:14px auto 0;padding:4px;color:var(--moon);background:none;border:0;font-size:.85rem;opacity:.8;text-decoration:underline;text-underline-offset:3px}
+.link:hover{opacity:1}
+#msg{min-height:1.4em;margin:10px 0 0;font-size:.85rem;color:var(--aurora)}
+#msg.err{color:var(--err)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01s!important}}
+</style>
 </head>
-<body>
-  <h1>Welcome to my AI Website</h1>
-  <p>This site is powered by GitHub Pages.</p>
-  <script src="script.js"></script>
+<body data-state="splash">
+
+<div id="art" role="img" aria-label="Geronimo: a yin-yang of light and dark nebula"></div>
+<p id="hint">Tap or press any key to sign in</p>
+
+<main id="login" class="panel">
+  <form class="card" id="form" novalidate>
+    <h1 id="title">Welcome back</h1>
+    <p class="sub" id="sub">Sign in to Geronimo.</p>
+    <label>Email<input id="email" type="email" autocomplete="email"></label>
+    <label>Password<input id="pw" type="password" autocomplete="current-password"></label>
+    <button class="go" id="go">Sign in</button>
+    <p id="msg" role="status"></p>
+    <button type="button" class="link" id="switch">New here? Create an account</button>
+  </form>
+</main>
+
+<section id="welcome" class="panel">
+  <div class="card">
+    <h1>You're signed in</h1>
+    <p class="sub" id="who"></p>
+    <button class="go" id="out">Sign out</button>
+  </div>
+</section>
+
+<script>
+const IDLE_SECONDS = 30;   // login screen returns to the artwork after this much inactivity
+
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  appId: "YOUR_APP_ID"
+};
+
+const $ = id => document.getElementById(id);
+const configured = !Object.values(FIREBASE_CONFIG).some(v => v.startsWith("YOUR_"));
+let state = "splash", mode = "in", idleTimer, auth, fb, authReady;
+
+function setState(s){ state = s; document.body.dataset.state = s; }
+function say(t, bad){ $("msg").textContent = t; $("msg").className = bad ? "err" : ""; }
+
+/* Splash <-> login, with the idle timer */
+function resetIdle(){ clearTimeout(idleTimer); if (state === "login") idleTimer = setTimeout(toSplash, IDLE_SECONDS * 1000); }
+function toLogin(){ setState("login"); resetIdle(); setTimeout(() => state === "login" && $("email").focus(), 650); }
+function toSplash(){ clearTimeout(idleTimer); setState("splash"); $("form").reset(); setMode("in"); document.activeElement.blur(); }
+
+addEventListener("pointerdown", () => state === "splash" ? toLogin() : resetIdle());
+addEventListener("keydown",     () => state === "splash" ? toLogin() : resetIdle());
+["pointermove", "wheel", "input"].forEach(t => addEventListener(t, resetIdle, { passive: true }));
+
+/* Sign in / create account toggle */
+function setMode(m){
+  mode = m; const up = m === "up";
+  $("title").textContent  = up ? "Create your account" : "Welcome back";
+  $("sub").textContent    = up ? "Choose an email and a password of at least 6 characters." : "Sign in to Geronimo.";
+  $("go").textContent     = up ? "Create account" : "Sign in";
+  $("switch").textContent = up ? "Already have an account? Sign in" : "New here? Create an account";
+  $("pw").autocomplete    = up ? "new-password" : "current-password";
+  say("");
+}
+$("switch").onclick = () => setMode(mode === "in" ? "up" : "in");
+
+/* Firebase Authentication */
+const ERRORS = {
+  "auth/invalid-email": "That email address doesn't look right. Check it and try again.",
+  "auth/invalid-credential": "Wrong email or password. Check both and try again.",
+  "auth/wrong-password": "Wrong email or password. Check both and try again.",
+  "auth/user-not-found": "Wrong email or password. Check both and try again.",
+  "auth/email-already-in-use": "An account with that email already exists. Sign in instead.",
+  "auth/weak-password": "Use a password of at least 6 characters.",
+  "auth/too-many-requests": "Too many attempts. Wait a few minutes, then try again.",
+  "auth/network-request-failed": "Can't reach the sign-in service. Check your connection and try again.",
+  "auth/unauthorized-domain": "This website's address isn't allowed yet. Add it under Authentication > Settings > Authorized domains in Firebase.",
+  "auth/operation-not-allowed": "Email sign-in is switched off. Turn on Email/Password under Authentication > Sign-in method in Firebase."
+};
+
+function initAuth(){
+  return authReady ||= (async () => {
+    const base = "https://www.gstatic.com/firebasejs/10.12.2/";
+    const [{ initializeApp }, mod] = await Promise.all([import(base + "firebase-app.js"), import(base + "firebase-auth.js")]);
+    fb = mod; auth = mod.getAuth(initializeApp(FIREBASE_CONFIG));
+    mod.onAuthStateChanged(auth, user => {
+      if (user){ $("who").textContent = user.email; $("form").reset(); clearTimeout(idleTimer); setState("in"); }
+      else if (state === "in") toSplash();
+    });
+  })().catch(e => { authReady = null; throw e; });
+}
+if (configured) initAuth().catch(() => {});
+
+$("form").onsubmit = async e => {
+  e.preventDefault();
+  const email = $("email").value.trim(), pw = $("pw").value;
+  if (!configured) return say("Login isn't connected yet. Add your Firebase settings near the top of this page's script.", true);
+  if (!email || !pw) return say("Enter your email and password.", true);
+  $("go").disabled = true;
+  say(mode === "in" ? "Signing in..." : "Creating your account...");
+  try {
+    await initAuth();
+    await (mode === "in" ? fb.signInWithEmailAndPassword : fb.createUserWithEmailAndPassword)(auth, email, pw);
+  } catch (err) {
+    say(ERRORS[err.code] || "Something went wrong. Check your connection and try again.", true);
+  }
+  $("go").disabled = false;
+};
+$("out").onclick = () => fb.signOut(auth);
+</script>
 </body>
 </html>
