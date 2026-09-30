@@ -15,7 +15,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Geronimo</title>
+<title>Geronimo AI</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%AF%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
@@ -61,13 +61,14 @@ button:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
 
 <main id="login" class="panel">
   <form class="card" id="form" novalidate>
-    <h1 id="title">Welcome back</h1>
-    <p class="sub" id="sub">Sign in to Geronimo.</p>
+    <h1 id="title">GERONIMO AI</h1>
+    <p class="sub" id="sub">Your advanced personal AI platform. Manage your workflow, analyze data, and accelerate your productivity seamlessly.</p>
     <label>Email<input id="email" type="email" autocomplete="email"></label>
     <label>Password<input id="pw" type="password" autocomplete="current-password"></label>
     <button class="go" id="go">Sign in</button>
     <p id="msg" role="status"></p>
     <button type="button" class="link" id="switch">New here? Create an account</button>
+    <a class="link" href="dashboard.html" style="text-align:center;margin-top:10px;">Go to Dashboard →</a>
   </form>
 </main>
 
@@ -110,8 +111,8 @@ addEventListener("keydown",     () => state === "splash" ? toLogin() : resetIdle
 /* Sign in / create account toggle */
 function setMode(m){
   mode = m; const up = m === "up";
-  $("title").textContent  = up ? "Create your account" : "Welcome back";
-  $("sub").textContent    = up ? "Choose an email and a password of at least 6 characters." : "Sign in to Geronimo.";
+  $("title").textContent  = up ? "Create your account" : "GERONIMO AI";
+  $("sub").textContent    = up ? "Choose an email and a password of at least 6 characters." : "Your advanced personal AI platform. Manage your workflow, analyze data, and accelerate your productivity seamlessly.";
   $("go").textContent     = up ? "Create account" : "Sign in";
   $("switch").textContent = up ? "Already have an account? Sign in" : "New here? Create an account";
   $("pw").autocomplete    = up ? "new-password" : "current-password";
