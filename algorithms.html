@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geronimo AI Dashboard</title>
+<style>
+:root{
+  --bg:#edf4ff;
+  --panel:#f8fbff;
+  --ink:#13243d;
+  --muted:#4b678b;
+  --blue:#2d7ff9;
+  --navy:#112b46;
+  --cyan:#8ad9ff;
+  --mint:#9ae6c8;
+  --orange:#ffb067;
+  --purple:#b39dff;
+  --rose:#ff8fb1;
+  --card:#dfeeff;
+  --line:#d9e9ff;
+  --green:#4ec29a;
+  --shadow:0 12px 26px rgba(17,43,70,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Montserrat,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#ebf2ff,#dfeeff 28%,#edf5ff 100%);color:var(--ink)}
+body{padding:24px}
+a{color:inherit;text-decoration:none}
+.container{max-width:1220px;margin:0 auto}
+.topbar{background:linear-gradient(90deg,#0b1f38,#123b68);color:#fff;border-radius:18px;padding:18px 22px;box-shadow:var(--shadow);border:2px solid rgba(255,255,255,.2)}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.brand{font-size:clamp(1.7rem,2vw,2.4rem);font-weight:800;letter-spacing:.02em}
+.nav{display:flex;flex-wrap:wrap;gap:12px 18px;font-size:.85rem;font-weight:700;opacity:.98}
+.nav span{opacity:.8}
+.nav .dot{opacity:.65}
+.hero-box{margin-top:26px;border:3px solid var(--line);background:rgba(255,255,255,.2);border-radius:22px;padding:18px 18px 0;box-shadow:var(--shadow)}
+.workflow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:14px 12px 10px}
+.node{min-height:210px;border-radius:18px;padding:18px 18px 10px;border:2px solid rgba(17,43,70,.16);background:var(--panel);display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:12px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.24)}
+.node .icon{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#6ca8ff,#3d8cff);color:#fff;font-size:1.5rem;box-shadow:0 6px 18px rgba(45,127,249,.3)}
+.node:nth-child(2) .icon{background:linear-gradient(135deg,#c2d5ff,#7ebafe)}
+.node:nth-child(3) .icon{background:linear-gradient(135deg,#96e6b7,#58bf8d)}
+.node:nth-child(4) .icon{background:linear-gradient(135deg,#b8aaf8,#6e78f7)}
+.node h3{margin:0;font-size:1.15rem}
+.node p{margin:0;font-size:.92rem;line-height:1.45;color:var(--muted)}
+.node ul{margin:0;padding-left:18px;font-size:.88rem;line-height:1.55;color:var(--ink);opacity:.9}
+.node:nth-child(1){background:#dfeeff}
+.node:nth-child(2){background:#ebf3ff}
+.node:nth-child(3){background:#ddf0e6}
+.node:nth-child(4){background:#e8ebff}
+.section{margin-top:28px;border:3px solid var(--line);background:rgba(255,255,255,.28);border-radius:22px;padding:18px 18px 12px;box-shadow:var(--shadow)}
+.section h2{margin:0 0 18px;text-align:center;font-size:clamp(1.6rem,2.2vw,2.5rem);color:var(--navy)}
+.capabilities{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:16px}
+.card{background:var(--panel);border:2px solid rgba(17,43,70,.12);border-radius:18px;padding:16px;min-height:200px}
+.card h3{margin:0 0 8px;font-size:1.02rem}
+.card ul{margin:0;padding-left:18px;line-height:1.6;font-size:.88rem;color:var(--ink)}
+.card:nth-child(1){background:#dfeeff}
+.card:nth-child(2){background:#dff7ee}
+.card:nth-child(3){background:#fbead1}
+.card:nth-child(4){background:#e9ecff}
+.card:nth-child(5){background:#f9e7ff}
+.card:nth-child(6){background:#fef0f2}
+.stepper{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;margin-top:18px}
+.step{background:var(--panel);border:2px solid rgba(17,43,70,.12);border-radius:18px;padding:18px 16px;min-height:190px}
+.step .num{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#1f7ef7,#235ec7);color:#fff;font-weight:800;margin-bottom:12px}
+.step:nth-child(2) .num{background:linear-gradient(135deg,#a77dff,#7b5ff0)}
+.step:nth-child(3) .num{background:linear-gradient(135deg,#ffb96c,#ff7a59)}
+.step:nth-child(4) .num{background:linear-gradient(135deg,#4ad8a2,#3dbf9a)}
+.step:nth-child(5) .num{background:linear-gradient(135deg,#7ea7ff,#5c6ce7)}
+.step h3{margin:0 0 8px;font-size:1.02rem}
+.step p{margin:0;color:var(--muted);line-height:1.5;font-size:.9rem}
+.bottom-grid{display:grid;grid-template-columns:1.2fr 1.1fr 1fr;gap:18px;margin-top:22px;align-items:stretch}
+.stack,.result{background:var(--panel);border:2px solid rgba(17,43,70,.12);border-radius:18px;padding:18px}
+.stack h3,.result h3{margin:0 0 12px;font-size:1.2rem}
+.stack-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+.stack-item{display:flex;align-items:center;gap:10px;min-height:52px;color:var(--ink);font-size:.9rem}
+.icon-mini{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#dfeeff,#b7d9ff);display:grid;place-items:center;font-size:1rem}
+.result ul{margin:0;padding-left:20px;line-height:1.7;color:var(--ink)}
+.cta{display:flex;justify-content:center;padding:20px 0 10px}
+.button{display:inline-block;padding:14px 26px;border-radius:12px;border:0;background:linear-gradient(135deg,#1a85ff,#0f4db6);color:#fff;font-weight:800;letter-spacing:.02em;box-shadow:0 10px 18px rgba(15,77,182,.22)}
+@media (max-width: 980px){
+  .workflow,.capabilities,.stepper,.bottom-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media (max-width: 640px){
+  body{padding:16px}
+  .workflow,.capabilities,.stepper,.bottom-grid,.stack-grid{grid-template-columns:1fr}
+  .topbar-inner{align-items:flex-start}
+}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">AI Integrated with Your Website + Full PC Control</div>
+        <nav class="nav" aria-label="Main navigation">
+          <span>Talk</span><span class="dot">•</span>
+          <span>Browse</span><span class="dot">•</span>
+          <span>Create</span><span class="dot">•</span>
+          <span>Manage</span><span class="dot">•</span>
+          <span>Do Everything</span>
+        </nav>
+      </div>
+    </header>
+
+    <section class="hero-box">
+      <div class="workflow">
+        <article class="node">
+          <div class="icon">👤</div>
+          <h3>You (User)</h3>
+          <p>Interact with your website through a browser, chat, voice or text.</p>
+          <ul>
+            <li>Ask questions</li>
+            <li>Give commands</li>
+            <li>Request tasks</li>
+          </ul>
+        </article>
+
+        <article class="node">
+          <div class="icon">🌐</div>
+          <h3>Your Website</h3>
+          <p>Provides the chat interface and connects to the AI system.</p>
+          <ul>
+            <li>Chat UI</li>
+            <li>User management</li>
+            <li>Secure connection</li>
+          </ul>
+        </article>
+
+        <article class="node">
+          <div class="icon">🧠</div>
+          <h3>AI Assistant</h3>
+          <p>Understands your request, plans the task, and decides what to do.</p>
+          <ul>
+            <li>NLP</li>
+            <li>Task planning</li>
+            <li>Tool selection</li>
+          </ul>
+        </article>
+
+        <article class="node">
+          <div class="icon">💻</div>
+          <h3>PC Control Layer</h3>
+          <p>The AI uses secure automation to perform actions on your PC.</p>
+          <ul>
+            <li>Run apps</li>
+            <li>Control settings</li>
+            <li>Automate files</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>What the AI Can Do on Your PC</h2>
+      <div class="capabilities">
+        <article class="card">
+          <h3>System Management</h3>
+          <ul>
+            <li>Open/close apps</li>
+            <li>Adjust settings</li>
+            <li>Control files</li>
+            <li>Start/stop services</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h3>File &amp; Folder Operations</h3>
+          <ul>
+            <li>Create/delete/move</li>
+            <li>Search files</li>
+            <li>Organize folders</li>
+            <li>Back up projects</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h3>Productivity Apps</h3>
+          <ul>
+            <li>Word / Excel / PowerPoint</li>
+            <li>Documents prep</li>
+            <li>Calendar reminders</li>
+            <li>Task automation</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h3>Internet &amp; Browsing</h3>
+          <ul>
+            <li>Search the web</li>
+            <li>Manage bookmarks</li>
+            <li>Download files</li>
+            <li>Read websites</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h3>Multimedia &amp; Creativity</h3>
+          <ul>
+            <li>Edit photos/videos</li>
+            <li>Generate content</li>
+            <li>Create visuals</li>
+            <li>Audio and design tools</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h3>Development &amp; AI Work</h3>
+          <ul>
+            <li>Run scripts</li>
+            <li>Analyze data</li>
+            <li>Work with databases</li>
+            <li>Use AI dev tools</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>How It Works (Step-by-Step)</h2>
+      <div class="stepper">
+        <article class="step">
+          <div class="num">1</div>
+          <h3>You Give a Command</h3>
+          <p>“Open Excel, create a report and email it to my team.”</p>
+        </article>
+
+        <article class="step">
+          <div class="num">2</div>
+          <h3>AI Understands &amp; Plans</h3>
+          <p>It breaks the request into small steps and chooses the right tools.</p>
+        </article>
+
+        <article class="step">
+          <div class="num">3</div>
+          <h3>PC Executes the Task</h3>
+          <p>The AI can open apps, process files, and run commands on your computer.</p>
+        </article>
+
+        <article class="step">
+          <div class="num">4</div>
+          <h3>Result</h3>
+          <p>You get a confirmation with the output, file, or status update.</p>
+        </article>
+
+        <article class="step">
+          <div class="num">5</div>
+          <h3>You View / Continue</h3>
+          <p>Review the result, ask follow-up questions, or give the next command.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="bottom-grid">
+        <div class="stack">
+          <h3>Tools &amp; Technologies (Example Stack)</h3>
+          <div class="stack-grid">
+            <div class="stack-item"><span class="icon-mini">🌐</span> Web Frontend</div>
+            <div class="stack-item"><span class="icon-mini">🧩</span> Backend</div>
+            <div class="stack-item"><span class="icon-mini">🤖</span> AI Model</div>
+            <div class="stack-item"><span class="icon-mini">⚙️</span> PC Automation</div>
+            <div class="stack-item"><span class="icon-mini">🔒</span> Security</div>
+            <div class="stack-item"><span class="icon-mini">📦</span> Permissions</div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <h3>Security &amp; Permissions</h3>
+          <ul>
+            <li>You grant permission for PC actions</li>
+            <li>Encrypted communication</li>
+            <li>User authentication</li>
+            <li>Logs and activity history</li>
+            <li>Limited automation scope</li>
+          </ul>
+        </div>
+
+        <div class="result">
+          <h3>The Result</h3>
+          <ul>
+            <li>Your website works as an AI assistant</li>
+            <li>It can do work on your PC</li>
+            <li>You control permissions and actions</li>
+            <li>Everything stays in one workflow</li>
+          </ul>
+        </div>
+      </div>
+      <div class="cta">
+        <a class="button" href="index.html">Back to Home</a>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
