@@ -50,6 +50,8 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
 .card h2{margin:0 0 16px;font-size:1.3rem;letter-spacing:.02em;color:var(--aurora)}
 .card h3{margin:0 0 12px;font-size:1rem;opacity:.95}
 .card p{margin:0 0 12px;opacity:.8;font-size:.9rem}
+.card a{color:var(--aurora);text-decoration:none;font-weight:500}
+.card a:hover{text-decoration:underline}
 
 /* Chat Interface */
 .chat-container{display:flex;flex-direction:column;height:100%;gap:16px}
@@ -117,7 +119,7 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
     </div>
     <nav class="nav">
       <li><a href="#" data-page="chat" class="nav-link active">Chat</a></li>
-      <li><a href="#" data-page="tasks" class="nav-link">Tasks</a></li>
+      <li><a href="tasks.html" class="nav-link">Tasks</a></li>
       <li><a href="#" data-page="capabilities" class="nav-link">Capabilities</a></li>
       <li><a href="#" data-page="settings" class="nav-link">Settings</a></li>
     </nav>
@@ -154,46 +156,12 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
         </div>
       </div>
 
-      <!-- Tasks Page -->
-      <div class="panel" data-page="tasks">
-        <div class="card">
-          <h2>Active Tasks</h2>
-          <p>Monitor and manage tasks being executed by the AI on your system.</p>
-        </div>
-        <div id="tasks-container">
-          <div class="task-item">
-            <div class="task-icon pending">📋</div>
-            <div class="task-content">
-              <div class="task-title">Open Excel and create report</div>
-              <div class="task-desc">User command: "Create a Q3 sales report"</div>
-              <div class="task-status">Pending</div>
-            </div>
-          </div>
-          <div class="task-item">
-            <div class="task-icon running">⚙️</div>
-            <div class="task-content">
-              <div class="task-title">Processing data and generating charts</div>
-              <div class="task-desc">Breaking down: fetch data → create pivot → add charts</div>
-              <div class="task-status">In Progress</div>
-            </div>
-          </div>
-          <div class="task-item">
-            <div class="task-icon complete">✓</div>
-            <div class="task-content">
-              <div class="task-title">Email report to team</div>
-              <div class="task-desc">Sent to: team@company.com</div>
-              <div class="task-status complete">Complete</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Capabilities Page -->
       <div class="panel" data-page="capabilities">
         <div class="card">
           <h2>AI Capabilities</h2>
           <p>Explore what Geronimo can do for you on your computer and online.</p>
-          <a href="algorithms.html" style="color:var(--aurora);text-decoration:underline;font-weight:500">View full AI blueprint →</a>
+          <a href="algorithms.html" target="_blank">View full AI blueprint →</a>
         </div>
 
         <div class="card">
@@ -354,20 +322,22 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
 </div>
 
 <script>
-// Navigation
+// Navigation for internal pages
 document.querySelectorAll('.nav-link').forEach(link => {
-  link.addEventListener('click', e => {
-    e.preventDefault();
-    const page = link.dataset.page;
-    
-    // Update active nav
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    link.classList.add('active');
-    
-    // Update active panel
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.querySelector(`[data-page="${page}"]`).classList.add('active');
-  });
+  if (link.dataset.page) {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const page = link.dataset.page;
+      
+      // Update active nav
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      
+      // Update active panel
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelector(`[data-page="${page}"]`).classList.add('active');
+    });
+  }
 });
 
 // Chat functionality
