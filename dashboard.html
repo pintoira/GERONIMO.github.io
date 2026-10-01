@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Geronimo AI Dashboard</title>
+<title>Geronimo</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%AF%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --cosmos:#0b0817;
@@ -12,376 +15,224 @@
   --glass:rgba(11,8,23,.68);
   --edge:rgba(239,226,198,.2);
   --err:#ffb4a8;
-  --success:#4ec29a;
-  --warn:#ffb067;
+  --success:#7ee0b8;
+  --soft:#c6d6ff;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fixed;color:var(--moon);font:400 14px/1.5 Montserrat,system-ui,sans-serif;overflow-x:hidden}
-
-/* Layout */
-.wrapper{display:grid;grid-template-columns:280px 1fr;height:100vh;gap:0}
-.sidebar{background:rgba(11,8,23,.85);border-right:1px solid var(--edge);overflow-y:auto;padding:20px 0}
-.main{display:flex;flex-direction:column;overflow:hidden}
-.header{background:linear-gradient(90deg,rgba(11,8,23,.9),rgba(27,18,55,.9));border-bottom:1px solid var(--edge);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
-.content{flex:1;overflow-y:auto;padding:24px}
-
-.logo{padding:0 20px 24px;border-bottom:1px solid var(--edge)}
-.logo h1{margin:0;font-size:1.3rem;font-weight:700;letter-spacing:.05em;color:var(--aurora)}
-
-.nav{list-style:none;margin:0;padding:0}
-.nav li{margin:0}
-.nav a{display:block;padding:12px 20px;color:var(--moon);text-decoration:none;font-size:.9rem;border-left:3px solid transparent;transition:all .2s}
-.nav a:hover{background:rgba(134,183,255,.1);border-left-color:var(--aurora)}
-.nav a.active{background:rgba(134,183,255,.15);border-left-color:var(--aurora);color:var(--aurora)}
-
-.header-content{display:flex;align-items:center;gap:16px;flex:1}
-.header-title{font-size:1.4rem;font-weight:600}
-.user-badge{background:rgba(239,226,198,.1);border:1px solid var(--edge);border-radius:20px;padding:8px 14px;font-size:.85rem;margin-left:auto}
-.logout-btn{background:rgba(255,180,168,.2);border:1px solid rgba(255,180,168,.4);color:var(--err);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.85rem;transition:all .2s}
-.logout-btn:hover{background:rgba(255,180,168,.35)}
-
-/* Panels */
-.panel{opacity:0;visibility:hidden;position:absolute;width:100%;height:100%;transition:opacity .3s,visibility .3s}
-.panel.active{opacity:1;visibility:visible;position:relative;width:auto;height:auto}
-
-.card{background:var(--glass);border:1px solid var(--edge);border-radius:16px;padding:20px;margin-bottom:20px;backdrop-filter:blur(16px);box-shadow:0 0 40px rgba(134,183,255,.08)}
-
-.card h2{margin:0 0 16px;font-size:1.3rem;letter-spacing:.02em;color:var(--aurora)}
-.card h3{margin:0 0 12px;font-size:1rem;opacity:.95}
-.card p{margin:0 0 12px;opacity:.8;font-size:.9rem}
-.card a{color:var(--aurora);text-decoration:none;font-weight:500}
-.card a:hover{text-decoration:underline}
-
-/* Chat Interface */
-.chat-container{display:flex;flex-direction:column;height:100%;gap:16px}
-.chat-messages{flex:1;background:rgba(11,8,23,.3);border:1px solid var(--edge);border-radius:12px;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
-.message{padding:12px 14px;border-radius:10px;max-width:85%;word-wrap:break-word}
-.message.user{background:rgba(134,183,255,.25);border:1px solid rgba(134,183,255,.4);align-self:flex-end}
-.message.ai{background:rgba(78,194,154,.15);border:1px solid rgba(78,194,154,.3);align-self:flex-start}
-.message.system{background:rgba(255,176,103,.15);border:1px solid rgba(255,176,103,.3);align-self:center;max-width:90%;font-size:.85rem;opacity:.85}
-
-.chat-input-area{display:flex;gap:8px}
-.chat-input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--edge);color:var(--moon);padding:12px 14px;border-radius:10px;font:inherit;resize:none;max-height:100px}
-.chat-input:focus{outline:2px solid var(--aurora);outline-offset:1px;border-color:transparent}
-.send-btn{background:linear-gradient(135deg,var(--aurora),#5a9cff);border:0;color:var(--cosmos);padding:12px 16px;border-radius:10px;font-weight:600;cursor:pointer;transition:all .2s}
-.send-btn:hover{box-shadow:0 0 20px rgba(134,183,255,.4)}
-.send-btn:disabled{opacity:.5;cursor:wait}
-
-/* Tasks & Status */
-.task-item{background:rgba(11,8,23,.3);border:1px solid var(--edge);border-radius:12px;padding:14px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start}
-.task-icon{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;font-size:1.2rem}
-.task-icon.pending{background:rgba(255,176,103,.2)}
-.task-icon.running{background:rgba(134,183,255,.2)}
-.task-icon.complete{background:rgba(78,194,154,.2)}
-.task-content{flex:1}
-.task-title{margin:0 0 4px;font-weight:500}
-.task-desc{margin:0;font-size:.85rem;opacity:.75}
-.task-status{font-size:.75rem;padding:4px 8px;border-radius:4px;background:rgba(255,176,103,.2);color:var(--warn);width:fit-content;margin-top:6px}
-.task-status.complete{background:rgba(78,194,154,.2);color:var(--success)}
-
-/* Control Buttons */
-.control-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px}
-.control-btn{background:rgba(134,183,255,.15);border:1px solid rgba(134,183,255,.3);color:var(--moon);padding:12px;border-radius:10px;cursor:pointer;font-weight:500;font-size:.9rem;transition:all .2s}
-.control-btn:hover{background:rgba(134,183,255,.25);border-color:rgba(134,183,255,.5)}
-
-/* Settings */
-.setting-item{background:rgba(11,8,23,.3);border:1px solid var(--edge);border-radius:12px;padding:14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
-.setting-label{display:flex;flex-direction:column;gap:4px}
-.setting-label span:first-child{font-weight:500}
-.setting-label span:last-child{font-size:.85rem;opacity:.7}
-.toggle{width:48px;height:26px;background:rgba(78,194,154,.2);border:1px solid rgba(78,194,154,.3);border-radius:13px;position:relative;cursor:pointer;transition:all .2s}
-.toggle.on{background:rgba(78,194,154,.4);border-color:rgba(78,194,154,.6)}
-.toggle::after{content:'';position:absolute;width:22px;height:22px;background:var(--moon);border-radius:50%;top:2px;left:2px;transition:left .2s}
-.toggle.on::after{left:24px}
-
-/* Responsive */
-@media (max-width:800px){
-  .wrapper{grid-template-columns:1fr}
-  .sidebar{position:absolute;left:0;top:60px;width:240px;height:calc(100vh - 60px);z-index:100;border-right:1px solid var(--edge)}
-  .main{grid-column:1}
-  .content{padding:16px}
-  .chat-messages{max-height:300px}
+body{
+  background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fixed;
+  color:var(--moon);
+  font:400 16px/1.5 Montserrat,system-ui,sans-serif;
+  overflow:hidden;
 }
-
-@media (prefers-reduced-motion:reduce){
-  *{animation:none!important;transition-duration:.01s!important}
+#art{
+  position:fixed;inset:0;
+  background:url(geronimo.jpg) center/cover no-repeat;
+  transition:transform 1.2s ease,filter 1.2s ease;
 }
+@media (max-aspect-ratio:1/1){#art{background-size:100% auto}}
+body:not([data-state=splash]) #art{
+  transform:scale(1.04);
+  filter:blur(6px) brightness(.55);
+}
+#hint{
+  position:fixed;left:0;right:0;bottom:8vh;
+  margin:0;text-align:center;font-weight:300;letter-spacing:.12em;
+  opacity:0;transition:opacity .6s;animation:breathe 3.6s ease-in-out infinite;
+}
+body[data-state=splash] #hint{opacity:.85}
+@keyframes breathe{50%{text-shadow:0 0 18px var(--aurora)}}
+.panel{
+  position:fixed;inset:0;display:grid;place-items:center;
+  padding:20px;overflow:auto;opacity:0;visibility:hidden;
+  transition:opacity .6s,visibility .6s;
+}
+body[data-state=login] #login,
+body[data-state=in] #welcome{
+  opacity:1;visibility:visible;
+}
+.card{
+  width:min(390px,100%);
+  padding:34px 30px 26px;
+  border:1px solid var(--edge);
+  border-radius:20px;
+  background:var(--glass);
+  -webkit-backdrop-filter:blur(16px);
+  backdrop-filter:blur(16px);
+  box-shadow:0 0 80px rgba(134,183,255,.12);
+}
+h1{margin:0 0 6px;font-weight:300;font-size:1.7rem;letter-spacing:.03em}
+.sub{margin:0 0 22px;font-size:.9rem;opacity:.75}
+label{display:block;margin:0 0 14px;font-size:.85rem;font-weight:500}
+input{display:block;width:100%;margin-top:6px;padding:12px 14px;font:inherit;color:var(--moon);background:rgba(255,255,255,.06);border:1px solid var(--edge);border-radius:10px}
+input:focus{outline:2px solid var(--aurora);outline-offset:1px;border-color:transparent}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--aurora);outline-offset:2px}
+.go{width:100%;margin-top:6px;padding:12px;font-weight:500;color:var(--cosmos);background:var(--moon);border:0;border-radius:10px;transition:box-shadow .3s}
+.go:hover{box-shadow:0 0 24px rgba(239,226,198,.45)}
+.go:disabled{opacity:.6;cursor:wait}
+.link{display:block;margin:14px auto 0;padding:4px;color:var(--moon);background:none;border:0;font-size:.85rem;opacity:.8;text-decoration:underline;text-underline-offset:3px}
+.link:hover{opacity:1}
+#msg{min-height:1.4em;margin:10px 0 0;font-size:.85rem;color:var(--aurora)}
+#msg.err{color:var(--err)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.secondary{
+  display:block;text-align:center;padding:12px;background:rgba(134,183,255,.12);border:1px solid rgba(134,183,255,.32);color:var(--soft);border-radius:10px;text-decoration:none;font-weight:500
+}
+.secondary:hover{background:rgba(134,183,255,.18)}
+.status-pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(126,224,184,.12);border:1px solid rgba(126,224,184,.3);color:var(--success);font-size:.75rem;letter-spacing:.04em;margin-bottom:10px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01s!important}}
 </style>
 </head>
-<body>
+<body data-state="splash">
 
-<div class="wrapper">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="logo">
-      <h1>GERONIMO</h1>
+<div id="art" role="img" aria-label="Geronimo: a yin-yang of light and dark nebula"></div>
+<p id="hint">Tap or press any key to sign in</p>
+
+<main id="login" class="panel">
+  <form class="card" id="form" novalidate>
+    <h1 id="title">Welcome back</h1>
+    <p class="sub" id="sub">Sign in to Geronimo.</p>
+    <label>Email<input id="email" type="email" autocomplete="email"></label>
+    <label>Password<input id="pw" type="password" autocomplete="current-password"></label>
+    <button class="go" id="go">Sign in</button>
+    <p id="msg" role="status"></p>
+    <button type="button" class="link" id="switch">New here? Create an account</button>
+  </form>
+</main>
+
+<section id="welcome" class="panel">
+  <div class="card">
+    <div class="status-pill">Authenticated</div>
+    <h1>You're signed in</h1>
+    <p class="sub" id="who"></p>
+    <div class="actions">
+      <a class="secondary" href="dashboard.html">Open Dashboard</a>
+      <a class="secondary" href="algorithms.html">Explore Algorithms</a>
     </div>
-    <nav class="nav">
-      <li><a href="#" data-page="chat" class="nav-link active">Chat</a></li>
-      <li><a href="tasks.html" class="nav-link">Tasks</a></li>
-      <li><a href="#" data-page="capabilities" class="nav-link">Capabilities</a></li>
-      <li><a href="#" data-page="settings" class="nav-link">Settings</a></li>
-    </nav>
-  </aside>
-
-  <!-- Main Content -->
-  <main class="main">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-content">
-        <h1 class="header-title">AI Assistant Dashboard</h1>
-        <div class="user-badge" id="user-badge">User: admin@example.com</div>
-        <button class="logout-btn" id="logout-btn">Sign out</button>
-      </div>
-    </header>
-
-    <!-- Content Area -->
-    <div class="content">
-
-      <!-- Chat Page -->
-      <div class="panel active" data-page="chat">
-        <div class="card">
-          <h2>Talk to Geronimo</h2>
-          <p>Give commands, ask questions, or request tasks. The AI will plan and execute them on your PC.</p>
-        </div>
-        <div class="chat-container">
-          <div class="chat-messages" id="chat-messages">
-            <div class="message system">Welcome to Geronimo AI Dashboard. How can I help you today?</div>
-          </div>
-          <div class="chat-input-area">
-            <input type="text" class="chat-input" id="chat-input" placeholder="Ask me to do something... (e.g., 'Open Excel and create a report')" />
-            <button class="send-btn" id="send-btn">Send</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Capabilities Page -->
-      <div class="panel" data-page="capabilities">
-        <div class="card">
-          <h2>AI Capabilities</h2>
-          <p>Explore what Geronimo can do for you on your computer and online.</p>
-          <a href="algorithms.html" target="_blank">View full AI blueprint →</a>
-        </div>
-
-        <div class="card">
-          <h3>System Management</h3>
-          <p>Control your computer's settings, apps, and services.</p>
-          <div class="control-grid">
-            <button class="control-btn">Open/Close Apps</button>
-            <button class="control-btn">Adjust Settings</button>
-            <button class="control-btn">Control Files</button>
-            <button class="control-btn">Start/Stop Services</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>File & Folder Operations</h3>
-          <p>Manage, organize, and automate your documents and data.</p>
-          <div class="control-grid">
-            <button class="control-btn">Create/Delete</button>
-            <button class="control-btn">Move/Copy</button>
-            <button class="control-btn">Search Files</button>
-            <button class="control-btn">Backup/Restore</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Productivity Apps</h3>
-          <p>Work with Word, Excel, PowerPoint, and other office tools.</p>
-          <div class="control-grid">
-            <button class="control-btn">Create Docs</button>
-            <button class="control-btn">Build Spreadsheets</button>
-            <button class="control-btn">Design Slides</button>
-            <button class="control-btn">Schedule Tasks</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Internet & Browsing</h3>
-          <p>Search, download, and manage web content.</p>
-          <div class="control-grid">
-            <button class="control-btn">Search Web</button>
-            <button class="control-btn">Download Files</button>
-            <button class="control-btn">Read Articles</button>
-            <button class="control-btn">Manage Bookmarks</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Development & AI Work</h3>
-          <p>Run scripts, analyze data, and work with advanced tools.</p>
-          <div class="control-grid">
-            <button class="control-btn">Run Code</button>
-            <button class="control-btn">Analyze Data</button>
-            <button class="control-btn">Database Work</button>
-            <button class="control-btn">AI Tools</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Settings Page -->
-      <div class="panel" data-page="settings">
-        <div class="card">
-          <h2>Settings & Permissions</h2>
-          <p>Control what actions the AI can perform on your system and how it communicates with you.</p>
-        </div>
-
-        <div class="card">
-          <h3>Permission Controls</h3>
-          <div class="setting-item">
-            <div class="setting-label">
-              <span>Allow file operations</span>
-              <span>Create, delete, and move files</span>
-            </div>
-            <div class="toggle on"></div>
-          </div>
-          <div class="setting-item">
-            <div class="setting-label">
-              <span>Allow app control</span>
-              <span>Open and close applications</span>
-            </div>
-            <div class="toggle on"></div>
-          </div>
-          <div class="setting-item">
-            <div class="setting-label">
-              <span>Allow internet access</span>
-              <span>Browse web and download files</span>
-            </div>
-            <div class="toggle on"></div>
-          </div>
-          <div class="setting-item">
-            <div class="setting-label">
-              <span>Allow system settings changes</span>
-              <span>Modify computer configuration</span>
-            </div>
-            <div class="toggle"></div>
-          </div>
-          <div class="setting-item">
-            <div class="setting-label">
-              <span>Require approval for sensitive actions</span>
-              <span>Always ask before deleting files or changing settings</span>
-            </div>
-            <div class="toggle on"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Communication</h3>
-          <div class="setting-item">
-            <div class="setting-label">
-              <span>Chat notifications</span>
-              <span>Show alerts when AI responds</span>
-            </div>
-            <div class="toggle on"></div>
-          </div>
-          <div class="setting-item">
-            <div class="setting-label">
-              <span>Task updates</span>
-              <span>Notify when tasks complete</span>
-            </div>
-            <div class="toggle on"></div>
-          </div>
-          <div class="setting-item">
-            <div class="setting-label">
-              <span>Voice responses</span>
-              <span>AI can speak responses aloud</span>
-            </div>
-            <div class="toggle"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Security & Privacy</h3>
-          <div class="setting-item">
-            <div class="setting-label">
-              <span>Log all AI actions</span>
-              <span>Keep activity history for 30 days</span>
-            </div>
-            <div class="toggle on"></div>
-          </div>
-          <div class="setting-item">
-            <div class="setting-label">
-              <span>Encrypted communication</span>
-              <span>End-to-end encryption enabled</span>
-            </div>
-            <div class="toggle on"></div>
-          </div>
-          <div class="setting-item">
-            <div class="setting-label">
-              <span>Auto-lock after inactivity</span>
-              <span>Log out after 15 minutes</span>
-            </div>
-            <div class="toggle on"></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </main>
-</div>
+    <button class="go" id="out" style="margin-top:18px">Sign out</button>
+  </div>
+</section>
 
 <script>
-// Navigation for internal pages
-document.querySelectorAll('.nav-link').forEach(link => {
-  if (link.dataset.page) {
-    link.addEventListener('click', e => {
-      e.preventDefault();
-      const page = link.dataset.page;
-      
-      // Update active nav
-      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-      link.classList.add('active');
-      
-      // Update active panel
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      document.querySelector(`[data-page="${page}"]`).classList.add('active');
-    });
-  }
-});
+const IDLE_SECONDS = 30;
 
-// Chat functionality
-const chatMessages = document.getElementById('chat-messages');
-const chatInput = document.getElementById('chat-input');
-const sendBtn = document.getElementById('send-btn');
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  appId: "YOUR_APP_ID"
+};
 
-function addMessage(text, isUser) {
-  const msg = document.createElement('div');
-  msg.className = `message ${isUser ? 'user' : 'ai'}`;
-  msg.textContent = text;
-  chatMessages.appendChild(msg);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+const $ = id => document.getElementById(id);
+const configured = !Object.values(FIREBASE_CONFIG).some(v => v.startsWith("YOUR_"));
+let state = "splash", mode = "in", idleTimer, auth, fb, authReady;
+
+function setState(s){ state = s; document.body.dataset.state = s; }
+function say(t, bad){ $("msg").textContent = t; $("msg").className = bad ? "err" : ""; }
+
+function resetIdle(){ clearTimeout(idleTimer); if (state === "login") idleTimer = setTimeout(toSplash, IDLE_SECONDS * 1000); }
+function toLogin(){ setState("login"); resetIdle(); setTimeout(() => state === "login" && $("email").focus(), 650); }
+function toSplash(){ clearTimeout(idleTimer); setState("splash"); $("form").reset(); setMode("in"); document.activeElement.blur(); }
+
+addEventListener("pointerdown", () => state === "splash" ? toLogin() : resetIdle());
+addEventListener("keydown", () => state === "splash" ? toLogin() : resetIdle());
+["pointermove", "wheel", "input"].forEach(t => addEventListener(t, resetIdle, { passive: true }));
+
+function setMode(m){
+  mode = m; const up = m === "up";
+  $("title").textContent = up ? "Create your account" : "Welcome back";
+  $("sub").textContent = up ? "Choose an email and a password of at least 6 characters." : "Sign in to Geronimo.";
+  $("go").textContent = up ? "Create account" : "Sign in";
+  $("switch").textContent = up ? "Already have an account? Sign in" : "New here? Create an account";
+  $("pw").autocomplete = up ? "new-password" : "current-password";
+  say("");
 }
+$("switch").onclick = () => setMode(mode === "in" ? "up" : "in");
 
-sendBtn.addEventListener('click', () => {
-  const text = chatInput.value.trim();
-  if (!text) return;
-  
-  addMessage(text, true);
-  chatInput.value = '';
-  
-  // Simulate AI response
-  setTimeout(() => {
-    addMessage('I understand your request. Let me break this down into steps and execute it on your PC.', false);
-  }, 500);
-});
+const ERRORS = {
+  "auth/invalid-email": "That email address doesn't look right. Check it and try again.",
+  "auth/invalid-credential": "Wrong email or password. Check both and try again.",
+  "auth/wrong-password": "Wrong email or password. Check both and try again.",
+  "auth/user-not-found": "Wrong email or password. Check both and try again.",
+  "auth/email-already-in-use": "An account with that email already exists. Sign in instead.",
+  "auth/weak-password": "Use a password of at least 6 characters.",
+  "auth/too-many-requests": "Too many attempts. Wait a few minutes, then try again.",
+  "auth/network-request-failed": "Can't reach the sign-in service. Check your connection and try again.",
+  "auth/unauthorized-domain": "This website's address isn't allowed yet. Add it under Authentication > Settings > Authorized domains in Firebase.",
+  "auth/operation-not-allowed": "Email sign-in is switched off. Turn on Email/Password under Authentication > Sign-in method in Firebase."
+};
 
-chatInput.addEventListener('keypress', e => {
-  if (e.key === 'Enter') sendBtn.click();
-});
+function initAuth(){
+  return authReady ||= (async () => {
+    const base = "https://www.gstatic.com/firebasejs/10.12.2/";
+    const [{ initializeApp }, mod] = await Promise.all([import(base + "firebase-app.js"), import(base + "firebase-auth.js")]);
+    fb = mod; auth = mod.getAuth(initializeApp(FIREBASE_CONFIG));
+    mod.onAuthStateChanged(auth, user => {
+      if (user){
+        $("who").textContent = user.email;
+        $("form").reset();
+        clearTimeout(idleTimer);
+        setState("in");
+      } else if (state === "in") {
+        toSplash();
+      }
+    });
+  })().catch(e => { authReady = null; throw e; });
+}
+if (configured) initAuth().catch(() => {});
 
-// Toggles
-document.querySelectorAll('.toggle').forEach(toggle => {
-  toggle.addEventListener('click', () => {
-    toggle.classList.toggle('on');
-  });
-});
+$("form").onsubmit = async e => {
+  e.preventDefault();
+  const email = $("email").value.trim(), pw = $("pw").value;
+  if (!configured) return say("Login isn't connected yet. Add your Firebase settings near the top of this page's script.", true);
+  if (!email || !pw) return say("Enter your email and password.", true);
+  $("go").disabled = true;
+  say(mode === "in" ? "Signing in..." : "Creating your account...");
+  try {
+    await initAuth();
+    await (mode === "in" ? fb.signInWithEmailAndPassword : fb.createUserWithEmailAndPassword)(auth, email, pw);
+  } catch (err) {
+    say(ERRORS[err.code] || "Something went wrong. Check your connection and try again.", true);
+  }
+  $("go").disabled = false;
+};
 
-// Logout
-document.getElementById('logout-btn').addEventListener('click', () => {
-  window.location.href = 'index.html';
-});
+$("out").onclick = () => fb.signOut(auth);
 </script>
-
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

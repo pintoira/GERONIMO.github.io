@@ -1,89 +1,305 @@
-"use client";
-import { useEffect, useState } from "react";
-import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geronimo AI Dashboard</title>
+<style>
+:root{
+  --cosmos:#0b0817;
+  --moon:#efe2c6;
+  --aurora:#86b7ff;
+  --glass:rgba(11,8,23,.68);
+  --edge:rgba(239,226,198,.2);
+  --err:#ffb4a8;
+  --success:#4ec29a;
+  --warn:#ffb067;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fixed;color:var(--moon);font:400 14px/1.5 Montserrat,system-ui,sans-serif;overflow-x:hidden}
 
-// --- YOUR OLD FIREBASE SETUP - PASTE YOUR KEYS HERE ---
-const FIREBASE_CONFIG = {
-  apiKey: "PASTE_HERE",
-  authDomain: "PASTE_HERE",
-  projectId: "PASTE_HERE",
-  appId: "PASTE_HERE",
-};
-// Keep index.html and geronimo.jpg together - now in /public
-const app = typeof window!== 'undefined' && FIREBASE_CONFIG.apiKey!== "PASTE_HERE"? initializeApp(FIREBASE_CONFIG) : null;
-const auth = app? getAuth(app) : null;
+.wrapper{display:grid;grid-template-columns:280px 1fr;height:100vh;gap:0}
+.sidebar{background:rgba(11,8,23,.85);border-right:1px solid var(--edge);overflow-y:auto;padding:20px 0}
+.main{display:flex;flex-direction:column;overflow:hidden}
+.header{background:linear-gradient(90deg,rgba(11,8,23,.9),rgba(27,18,55,.9));border-bottom:1px solid var(--edge);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.content{flex:1;overflow-y:auto;padding:24px}
 
-export default function GeronimoHome() {
-  const [showSplash, setShowSplash] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
+.logo{padding:0 20px 24px;border-bottom:1px solid var(--edge)}
+.logo h1{margin:0;font-size:1.3rem;font-weight:700;letter-spacing:.05em;color:var(--aurora)}
 
-  useEffect(() => {
-    const handler = () => setShowSplash(false);
-    window.addEventListener("keydown", handler);
-    window.addEventListener("click", handler);
-    // auto hide after 4s like old version
-    const t = setTimeout(()=> setShowSplash(false), 4000);
-    return () => { clearTimeout(t); window.removeEventListener("keydown", handler); window.removeEventListener("click", handler); }
-  }, []);
+.nav{list-style:none;margin:0;padding:0}
+.nav li{margin:0}
+.nav a{display:block;padding:12px 20px;color:var(--moon);text-decoration:none;font-size:.9rem;border-left:3px solid transparent;transition:all .2s}
+.nav a:hover{background:rgba(134,183,255,.1);border-left-color:var(--aurora)}
+.nav a.active{background:rgba(134,183,255,.15);border-left-color:var(--aurora);color:var(--aurora)}
 
-  useEffect(() => {
-    if(!auth) return;
-    return onAuthStateChanged(auth, setUser);
-  }, []);
+.header-content{display:flex;align-items:center;gap:16px;flex:1}
+.header-title{font-size:1.4rem;font-weight:600}
+.user-badge{background:rgba(239,226,198,.1);border:1px solid var(--edge);border-radius:20px;padding:8px 14px;font-size:.85rem;margin-left:auto}
+.logout-btn{background:rgba(255,180,168,.2);border:1px solid rgba(255,180,168,.4);color:var(--err);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.85rem;transition:all .2s}
+.logout-btn:hover{background:rgba(255,180,168,.35)}
 
-  const login = async (e:any) => {
-    e.preventDefault();
-    if(!auth) return alert("Add your Firebase config first!");
-    await signInWithEmailAndPassword(auth, email, pass);
-  };
+.panel{opacity:0;visibility:hidden;position:absolute;width:100%;height:100%;transition:opacity .3s,visibility .3s}
+.panel.active{opacity:1;visibility:visible;position:relative;width:auto;height:auto}
 
-  // --- SPLASH SCREEN (YOUR OLD ART) ---
-  if (showSplash) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-slate-950 relative overflow-hidden cursor-pointer">
-        <img src="/geronimo.jpg" className="absolute inset-0 w-full h-full object-cover opacity-60 blur-[1px]" alt="geronimo" />
-        <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/40 to-slate-950/80" />
-        <div className="relative text-center z-10 p-8">
-          <h1 className="text-6xl font-black tracking-widest text-white drop-shadow-xl">GERONIMO</h1>
-          <p className="mt-4 text-white/70 animate-pulse">Tap or press any key to enter •</p>
+.card{background:var(--glass);border:1px solid var(--edge);border-radius:16px;padding:20px;margin-bottom:20px;backdrop-filter:blur(16px);box-shadow:0 0 40px rgba(134,183,255,.08)}
+
+.card h2{margin:0 0 16px;font-size:1.3rem;letter-spacing:.02em;color:var(--aurora)}
+.card h3{margin:0 0 12px;font-size:1rem;opacity:.95}
+.card p{margin:0 0 12px;opacity:.8;font-size:.9rem}
+.card a{color:var(--aurora);text-decoration:none;font-weight:500}
+.card a:hover{text-decoration:underline}
+
+.chat-container{display:flex;flex-direction:column;height:100%;gap:16px}
+.chat-messages{flex:1;background:rgba(11,8,23,.3);border:1px solid var(--edge);border-radius:12px;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.message{padding:12px 14px;border-radius:10px;max-width:85%;word-wrap:break-word}
+.message.user{background:rgba(134,183,255,.25);border:1px solid rgba(134,183,255,.4);align-self:flex-end}
+.message.ai{background:rgba(78,194,154,.15);border:1px solid rgba(78,194,154,.3);align-self:flex-start}
+.message.system{background:rgba(255,176,103,.15);border:1px solid rgba(255,176,103,.3);align-self:center;max-width:90%;font-size:.85rem;opacity:.85}
+
+.chat-input-area{display:flex;gap:8px}
+.chat-input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--edge);color:var(--moon);padding:12px 14px;border-radius:10px;font:inherit;resize:none;max-height:100px}
+.chat-input:focus{outline:2px solid var(--aurora);outline-offset:1px;border-color:transparent}
+.send-btn{background:linear-gradient(135deg,var(--aurora),#5a9cff);border:0;color:var(--cosmos);padding:12px 16px;border-radius:10px;font-weight:600;cursor:pointer;transition:all .2s}
+.send-btn:hover{box-shadow:0 0 20px rgba(134,183,255,.4)}
+.send-btn:disabled{opacity:.5;cursor:wait}
+
+.task-item{background:rgba(11,8,23,.3);border:1px solid var(--edge);border-radius:12px;padding:14px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start}
+.task-icon{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;font-size:1.2rem}
+.task-icon.pending{background:rgba(255,176,103,.2)}
+.task-icon.running{background:rgba(134,183,255,.2)}
+.task-icon.complete{background:rgba(78,194,154,.2)}
+.task-content{flex:1}
+.task-title{margin:0 0 4px;font-weight:500}
+.task-desc{margin:0;font-size:.85rem;opacity:.75}
+.task-status{font-size:.75rem;padding:4px 8px;border-radius:4px;background:rgba(255,176,103,.2);color:var(--warn);width:fit-content;margin-top:6px}
+.task-status.complete{background:rgba(78,194,154,.2);color:var(--success)}
+
+.control-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px}
+.control-btn{background:rgba(134,183,255,.15);border:1px solid rgba(134,183,255,.3);color:var(--moon);padding:12px;border-radius:10px;cursor:pointer;font-weight:500;font-size:.9rem;transition:all .2s}
+.control-btn:hover{background:rgba(134,183,255,.25);border-color:rgba(134,183,255,.5)}
+
+.setting-item{background:rgba(11,8,23,.3);border:1px solid var(--edge);border-radius:12px;padding:14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.setting-label{display:flex;flex-direction:column;gap:4px}
+.setting-label span:first-child{font-weight:500}
+.setting-label span:last-child{font-size:.85rem;opacity:.7}
+.toggle{width:48px;height:26px;background:rgba(78,194,154,.2);border:1px solid rgba(78,194,154,.3);border-radius:13px;position:relative;cursor:pointer;transition:all .2s}
+.toggle.on{background:rgba(78,194,154,.4);border-color:rgba(78,194,154,.6)}
+.toggle::after{content:'';position:absolute;width:22px;height:22px;background:var(--moon);border-radius:50%;top:2px;left:2px;transition:left .2s}
+.toggle.on::after{left:24px}
+
+@media (max-width:800px){
+  .wrapper{grid-template-columns:1fr}
+  .sidebar{position:absolute;left:0;top:60px;width:240px;height:calc(100vh - 60px);z-index:100;border-right:1px solid var(--edge)}
+  .main{grid-column:1}
+  .content{padding:16px}
+  .chat-messages{max-height:300px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition-duration:.01s!important}
+}
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <aside class="sidebar">
+    <div class="logo">
+      <h1>GERONIMO</h1>
+    </div>
+    <nav class="nav">
+      <li><a href="#" data-page="chat" class="nav-link active">Chat</a></li>
+      <li><a href="tasks.html" class="nav-link">Tasks</a></li>
+      <li><a href="algorithms.html" class="nav-link">Blueprint</a></li>
+      <li><a href="pc-control.html" class="nav-link">PC Control</a></li>
+      <li><a href="settings.html" class="nav-link">Settings</a></li>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div class="header-content">
+        <h1 class="header-title">AI Assistant Dashboard</h1>
+        <div class="user-badge" id="user-badge">User: admin@example.com</div>
+        <button class="logout-btn" id="logout-btn">Sign out</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="panel active" data-page="chat">
+        <div class="card">
+          <h2>Talk to Geronimo</h2>
+          <p>Give commands, ask questions, or request tasks. The AI will plan and execute them on your PC.</p>
+        </div>
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <div class="message system">Welcome to Geronimo AI Dashboard. How can I help you today?</div>
+          </div>
+          <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Ask me to do something... (e.g., 'Open Excel and create a report')" />
+            <button class="send-btn" id="send-btn">Send</button>
+          </div>
         </div>
       </div>
-    );
-  }
 
-  // --- MAIN PAGE (NEW GLOW DESIGN + OLD LOGIN) ---
-  return (
-    <div className="min-h-screen bg-slate-950 text-white relative overflow-hidden">
-      {/* New glow */}
-      <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[120px]" />
-      <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[120px]" />
+      <div class="panel" data-page="capabilities">
+        <div class="card">
+          <h2>AI Capabilities</h2>
+          <p>Explore what Geronimo can do for you on your computer and online.</p>
+          <a href="algorithms.html" target="_blank">View full AI blueprint →</a>
+        </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto p-8 pt-24">
-        <h1 className="text-5xl md:text-7xl font-black">GERONIMO <span className="text-indigo-400">AI</span></h1>
-        <p className="mt-4 text-lg text-slate-300 max-w-2xl">Your advanced personal AI platform — integrated with your website and your PC. Scanner, files, apps, everything.</p>
-
-        {!user? (
-          <form onSubmit={login} className="mt-10 bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl max-w-sm">
-            <h3 className="font-bold mb-4">Login to connect PC</h3>
-            <input className="w-full p-3 rounded bg-slate-900 border border-white/10 mb-3" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
-            <input className="w-full p-3 rounded bg-slate-900 border border-white/10 mb-4" type="password" placeholder="Password" value={pass} onChange={e=>setPass(e.target.value)} />
-            <button className="w-full bg-indigo-600 hover:bg-indigo-500 p-3 rounded font-bold">Enter Dashboard →</button>
-            <p className="text-xs text-slate-400 mt-3">Setup: Firebase > Auth > Email/Password ON > Authorized domain: your vercel url</p>
-          </form>
-        ) : (
-          <div className="mt-10 bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl max-w-md">
-            <p className="text-slate-300">Welcome, {user.email}</p>
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <a href="/dashboard" className="bg-white text-black p-3 rounded text-center font-bold">Dashboard</a>
-              <a href="/api/pc-status" className="bg-indigo-600 p-3 rounded text-center font-bold">PC Agent: Online</a>
-            </div>
-            <button onClick={()=> auth && signOut(auth)} className="text-xs mt-4 text-slate-400">Logout</button>
+        <div class="card">
+          <h3>System Management</h3>
+          <p>Control your computer's settings, apps, and services.</p>
+          <div class="control-grid">
+            <button class="control-btn">Open/Close Apps</button>
+            <button class="control-btn">Adjust Settings</button>
+            <button class="control-btn">Control Files</button>
+            <button class="control-btn">Start/Stop Services</button>
           </div>
-        )}
+        </div>
+
+        <div class="card">
+          <h3>File &amp; Folder Operations</h3>
+          <p>Manage, organize, and automate your documents and data.</p>
+          <div class="control-grid">
+            <button class="control-btn">Create/Delete</button>
+            <button class="control-btn">Move/Copy</button>
+            <button class="control-btn">Search Files</button>
+            <button class="control-btn">Backup/Restore</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Productivity Apps</h3>
+          <p>Work with Word, Excel, PowerPoint, and other office tools.</p>
+          <div class="control-grid">
+            <button class="control-btn">Create Docs</button>
+            <button class="control-btn">Build Spreadsheets</button>
+            <button class="control-btn">Design Slides</button>
+            <button class="control-btn">Schedule Tasks</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" data-page="settings">
+        <div class="card">
+          <h2>Settings</h2>
+          <p>Keep your workspace secure and aligned with your preferences.</p>
+        </div>
+
+        <div class="card">
+          <h3>Permission Controls</h3>
+          <div class="setting-item">
+            <div class="setting-label">
+              <span>Allow file operations</span>
+              <span>Create, delete, and move files</span>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label">
+              <span>Allow app control</span>
+              <span>Open and close applications</span>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-label">
+              <span>Require approval for sensitive actions</span>
+              <span>Always confirm before deleting or installing</span>
+            </div>
+            <div class="toggle on"></div>
+          </div>
+        </div>
       </div>
     </div>
-  );
+  </main>
+</div>
+
+<script>
+const msg = document.getElementById('chat-messages');
+const input = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+
+function addMessage(text, type = 'ai') {
+  const el = document.createElement('div');
+  el.className = 'message ' + type;
+  el.textContent = text;
+  msg.appendChild(el);
+  msg.scrollTop = msg.scrollHeight;
 }
+
+sendBtn.addEventListener('click', () => {
+  const value = input.value.trim();
+  if (!value) return;
+  addMessage(value, 'user');
+  input.value = '';
+  setTimeout(() => addMessage('I can help with that. This is a prototype dashboard flow for Geronimo.', 'ai'), 200);
+});
+
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    sendBtn.click();
+  }
+});
+
+document.querySelectorAll('.toggle').forEach(toggle => {
+  toggle.addEventListener('click', () => toggle.classList.toggle('on'));
+});
+
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', e => {
+    if (link.getAttribute('href') === '#') {
+      e.preventDefault();
+    }
+    document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active'));
+    link.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
