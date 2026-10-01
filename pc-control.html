@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PC Control - Geronimo AI</title>
+<style>
+:root{
+  --cosmos:#0b0817;
+  --moon:#efe2c6;
+  --aurora:#86b7ff;
+  --glass:rgba(11,8,23,.68);
+  --edge:rgba(239,226,198,.2);
+  --success:#4ec29a;
+  --warn:#ffb067;
+  --err:#ffb4a8;
+  --purple:#b39dff;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fixed;color:var(--moon);font:400 14px/1.5 Montserrat,system-ui,sans-serif;overflow-x:hidden}
+
+a{text-decoration:none;color:inherit}
+.wrapper{display:grid;grid-template-columns:280px 1fr;height:100vh;gap:0}
+.sidebar{background:rgba(11,8,23,.85);border-right:1px solid var(--edge);overflow-y:auto;padding:20px 0}
+.main{display:flex;flex-direction:column;overflow:hidden}
+.header{background:linear-gradient(90deg,rgba(11,8,23,.9),rgba(27,18,55,.9));border-bottom:1px solid var(--edge);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.content{flex:1;overflow-y:auto;padding:24px}
+.logo{padding:0 20px 24px;border-bottom:1px solid var(--edge)}
+.logo h1{margin:0;font-size:1.3rem;font-weight:700;letter-spacing:.05em;color:var(--aurora)}
+.nav{list-style:none;margin:0;padding:0}
+.nav li{margin:0}
+.nav a{display:block;padding:12px 20px;color:var(--moon);text-decoration:none;font-size:.9rem;border-left:3px solid transparent;transition:all .2s}
+.nav a:hover{background:rgba(134,183,255,.1);border-left-color:var(--aurora)}
+.nav a.active{background:rgba(134,183,255,.15);border-left-color:var(--aurora);color:var(--aurora)}
+
+.header-content{display:flex;align-items:center;gap:16px;flex:1}
+.header-title{font-size:1.4rem;font-weight:600;margin:0}
+.user-badge{background:rgba(239,226,198,.1);border:1px solid var(--edge);border-radius:20px;padding:8px 14px;font-size:.85rem;margin-left:auto}
+.back-btn{background:rgba(134,183,255,.2);border:1px solid rgba(134,183,255,.4);color:var(--aurora);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.85rem}
+
+.card{background:var(--glass);border:1px solid var(--edge);border-radius:16px;padding:20px;margin-bottom:20px;backdrop-filter:blur(16px)}
+.card h2{margin:0 0 16px;font-size:1.3rem;color:var(--aurora);letter-spacing:.02em}
+.card h3{margin:0 0 12px;font-size:1rem}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:rgba(11,8,23,.3);border:1px solid var(--edge);border-radius:12px;padding:14px;text-align:center}
+.stat .value{font-size:2rem;font-weight:800;color:var(--aurora);margin:0}
+.stat .label{font-size:.8rem;opacity:.7;margin:6px 0 0}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.panel-box{background:rgba(11,8,23,.3);border:1px solid var(--edge);border-radius:14px;padding:16px}
+.meter{margin-top:12px}
+.meter-bar{height:10px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.meter-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#86b7ff,#4ec29a)}
+.meter-fill.warning{background:linear-gradient(90deg,#ffb067,#ff8f6b)}
+.meter-fill.danger{background:linear-gradient(90deg,#ff8f6b,#ffb4a8)}
+.meter-label{display:flex;justify-content:space-between;font-size:.85rem;opacity:.8}
+
+.app-list,.detail-list{display:flex;flex-direction:column;gap:10px}
+.app-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--edge);border-radius:10px;background:rgba(255,255,255,.02)}
+.app-name{font-weight:500}
+.badge{padding:4px 8px;border-radius:6px;font-size:.75rem;display:inline-block}
+.badge.running{background:rgba(78,194,154,.2);color:var(--success)}
+.badge.idle{background:rgba(255,176,103,.2);color:var(--warn)}
+.badge.blocked{background:rgba(255,180,168,.2);color:var(--err)}
+
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.action{padding:10px 14px;border-radius:10px;border:1px solid rgba(134,183,255,.3);background:rgba(134,183,255,.15);color:var(--moon);cursor:pointer;font-weight:500}
+.action.primary{background:linear-gradient(135deg,var(--aurora),#5a9cff);color:var(--cosmos)}
+.action.warn{background:rgba(255,176,103,.15);border-color:rgba(255,176,103,.35);color:var(--warn)}
+.action.danger{background:rgba(255,180,168,.15);border-color:rgba(255,180,168,.35);color:var(--err)}
+
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:10px 8px;border-bottom:1px solid rgba(239,226,198,.12);text-align:left;font-size:.9rem}
+.table th{color:var(--aurora);font-weight:700}
+
+@media (max-width:800px){
+  .wrapper{grid-template-columns:1fr}
+  .sidebar{position:absolute;left:0;top:60px;width:240px;height:calc(100vh - 60px);z-index:100}
+  .main{grid-column:1}
+  .content{padding:16px}
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <aside class="sidebar">
+    <div class="logo"><h1>GERONIMO</h1></div>
+    <nav class="nav">
+      <li><a href="dashboard.html">Chat</a></li>
+      <li><a href="tasks.html">Tasks</a></li>
+      <li><a href="pc-control.html" class="active">PC Control</a></li>
+      <li><a href="settings.html">Settings</a></li>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <div class="header-content">
+        <h1 class="header-title">PC Control Center</h1>
+        <div class="user-badge">Device: Workstation Pro</div>
+        <a class="back-btn" href="dashboard.html">← Dashboard</a>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="stats-grid">
+        <div class="stat">
+          <p class="value">72%</p>
+          <p class="label">CPU Usage</p>
+        </div>
+        <div class="stat">
+          <p class="value">61%</p>
+          <p class="label">Memory</p>
+        </div>
+        <div class="stat">
+          <p class="value">456 GB</p>
+          <p class="label">Free Storage</p>
+        </div>
+        <div class="stat">
+          <p class="value">18</p>
+          <p class="label">Running Apps</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>System Health</h2>
+        <div class="grid">
+          <div class="panel-box">
+            <h3>CPU</h3>
+            <div class="meter-label"><span>Load</span><span>72%</span></div>
+            <div class="meter"><div class="meter-fill" style="width:72%"></div></div>
+          </div>
+          <div class="panel-box">
+            <h3>Memory</h3>
+            <div class="meter-label"><span>Usage</span><span>61%</span></div>
+            <div class="meter"><div class="meter-fill" style="width:61%"></div></div>
+          </div>
+          <div class="panel-box">
+            <h3>Storage</h3>
+            <div class="meter-label"><span>Used</span><span>58%</span></div>
+            <div class="meter"><div class="meter-fill warning" style="width:58%"></div></div>
+          </div>
+          <div class="panel-box">
+            <h3>Battery</h3>
+            <div class="meter-label"><span>Charge</span><span>86%</span></div>
+            <div class="meter"><div class="meter-fill" style="width:86%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Active Applications</h2>
+        <div class="app-list">
+          <div class="app-item"><span class="app-name">Chrome</span><span class="badge running">Running</span></div>
+          <div class="app-item"><span class="app-name">Excel</span><span class="badge running">Running</span></div>
+          <div class="app-item"><span class="app-name">Teams</span><span class="badge idle">Idle</span></div>
+          <div class="app-item"><span class="app-name">Discord</span><span class="badge running">Running</span></div>
+          <div class="app-item"><span class="app-name">OneDrive</span><span class="badge blocked">Blocked</span></div>
+        </div>
+        <div class="btn-row">
+          <button class="action primary">Launch App</button>
+          <button class="action">Close App</button>
+          <button class="action warn">Restart Service</button>
+          <button class="action danger">Lock Session</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Device Status</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Status</th>
+              <th>Last Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Network Adapter</td>
+              <td><span class="badge running">Connected</span></td>
+              <td>Just now</td>
+            </tr>
+            <tr>
+              <td>Firewall</td>
+              <td><span class="badge running">Protected</span></td>
+              <td>1 min ago</td>
+            </tr>
+            <tr>
+              <td>Windows Update</td>
+              <td><span class="badge idle">Pending</span></td>
+              <td>12 min ago</td>
+            </tr>
+            <tr>
+              <td>Disk Cleanup</td>
+              <td><span class="badge running">Healthy</span></td>
+              <td>32 min ago</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>
