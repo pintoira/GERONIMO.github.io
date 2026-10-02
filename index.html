@@ -113,7 +113,7 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
     <header class="header">
       <div class="header-content">
         <h1 class="header-title">AI Assistant Dashboard</h1>
-        <div class="user-badge" id="user-badge">User: admin@example.com</div>
+        <div class="user-badge" id="user-badge">Not Signed In</div>
         <button class="logout-btn" id="logout-btn">Sign out</button>
       </div>
     </header>
@@ -217,7 +217,7 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
           <form id="login-form">
             <div class="form-group">
               <label for="login-email">Email Address</label>
-              <input type="email" id="login-email" class="form-input" placeholder="admin@example.com" required />
+              <input type="email" id="login-email" class="form-input" placeholder="you@example.com" required />
             </div>
             <div class="form-group">
               <label for="login-password">Password</label>
@@ -232,7 +232,29 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
   </main>
 </div>
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+
 <script>
+// Your Web App Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDn3lwMG5-pPBAJYp8NwnFaTVkYQmCnKFk",
+  authDomain: "geronimo-91d3e.firebaseapp.com",
+  projectId: "geronimo-91d3e",
+  storageBucket: "geronimo-91d3e.firebasestorage.app",
+  messagingSenderId: "820788577163",
+  appId: "1:820788577163:web:077492954053051590a58e",
+  measurementId: "G-55HRF561Q6"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+firebase.analytics();
+
+// DOM Elements
 const msg = document.getElementById('chat-messages');
 const input = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
@@ -267,18 +289,35 @@ document.querySelectorAll('.nav-link').forEach(link => {
   });
 });
 
-// Sign Out / Sign In flow
-logoutBtn.addEventListener('click', () => {
-  showPage('login');
+// Firebase Auth Observer (Listens for login status)
+auth.onAuthStateChanged(user => {
+  if (user) {
+    userBadge.textContent = 'User: ' + user.email;
+    logoutBtn.style.display = 'inline-block';
+    showPage('chat');
+  } else {
+    userBadge.textContent = 'Not Signed In';
+    logoutBtn.style.display = 'none';
+    showPage('login');
+  }
 });
 
-loginForm.addEventListener('submit', e => {
+// Handle Sign In Submission
+loginForm.addEventListener('submit', async e => {
   e.preventDefault();
-  const emailInput = document.getElementById('login-email').value;
-  if (emailInput) {
-    userBadge.textContent = 'User: ' + emailInput;
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (error) {
+    alert('Sign in failed: ' + error.message);
   }
-  showPage('chat');
+});
+
+// Handle Sign Out
+logoutBtn.addEventListener('click', () => {
+  auth.signOut();
 });
 
 // Chat Interface Flow
