@@ -30,7 +30,7 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
 
 .nav{list-style:none;margin:0;padding:0}
 .nav li{margin:0}
-.nav a{display:block;padding:12px 20px;color:var(--moon);text-decoration:none;font-size:.9rem;border-left:3px solid transparent;transition:all .2s}
+.nav a{display:block;padding:12px 20px;color:var(--moon);text-decoration:none;font-size:.9rem;border-left:3px solid transparent;transition:all .2s;cursor:pointer}
 .nav a:hover{background:rgba(134,183,255,.1);border-left-color:var(--aurora)}
 .nav a.active{background:rgba(134,183,255,.15);border-left-color:var(--aurora);color:var(--aurora)}
 
@@ -40,8 +40,8 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
 .logout-btn{background:rgba(255,180,168,.2);border:1px solid rgba(255,180,168,.4);color:var(--err);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.85rem;transition:all .2s}
 .logout-btn:hover{background:rgba(255,180,168,.35)}
 
-.panel{opacity:0;visibility:hidden;position:absolute;width:100%;height:100%;transition:opacity .3s,visibility .3s}
-.panel.active{opacity:1;visibility:visible;position:relative;width:auto;height:auto}
+.panel{display:none;width:100%;height:100%}
+.panel.active{display:block}
 
 .card{background:var(--glass);border:1px solid var(--edge);border-radius:16px;padding:20px;margin-bottom:20px;backdrop-filter:blur(16px);box-shadow:0 0 40px rgba(134,183,255,.08)}
 
@@ -51,7 +51,12 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
 .card a{color:var(--aurora);text-decoration:none;font-weight:500}
 .card a:hover{text-decoration:underline}
 
-.chat-container{display:flex;flex-direction:column;height:100%;gap:16px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;margin-bottom:6px;font-size:.85rem;opacity:.9}
+.form-input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--edge);color:var(--moon);padding:10px 14px;border-radius:8px;font:inherit}
+.form-input:focus{outline:2px solid var(--aurora);border-color:transparent}
+
+.chat-container{display:flex;flex-direction:column;height:calc(100% - 100px);min-height:400px;gap:16px}
 .chat-messages{flex:1;background:rgba(11,8,23,.3);border:1px solid var(--edge);border-radius:12px;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
 .message{padding:12px 14px;border-radius:10px;max-width:85%;word-wrap:break-word}
 .message.user{background:rgba(134,183,255,.25);border:1px solid rgba(134,183,255,.4);align-self:flex-end}
@@ -61,20 +66,8 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
 .chat-input-area{display:flex;gap:8px}
 .chat-input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--edge);color:var(--moon);padding:12px 14px;border-radius:10px;font:inherit;resize:none;max-height:100px}
 .chat-input:focus{outline:2px solid var(--aurora);outline-offset:1px;border-color:transparent}
-.send-btn{background:linear-gradient(135deg,var(--aurora),#5a9cff);border:0;color:var(--cosmos);padding:12px 16px;border-radius:10px;font-weight:600;cursor:pointer;transition:all .2s}
-.send-btn:hover{box-shadow:0 0 20px rgba(134,183,255,.4)}
-.send-btn:disabled{opacity:.5;cursor:wait}
-
-.task-item{background:rgba(11,8,23,.3);border:1px solid var(--edge);border-radius:12px;padding:14px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start}
-.task-icon{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;font-size:1.2rem}
-.task-icon.pending{background:rgba(255,176,103,.2)}
-.task-icon.running{background:rgba(134,183,255,.2)}
-.task-icon.complete{background:rgba(78,194,154,.2)}
-.task-content{flex:1}
-.task-title{margin:0 0 4px;font-weight:500}
-.task-desc{margin:0;font-size:.85rem;opacity:.75}
-.task-status{font-size:.75rem;padding:4px 8px;border-radius:4px;background:rgba(255,176,103,.2);color:var(--warn);width:fit-content;margin-top:6px}
-.task-status.complete{background:rgba(78,194,154,.2);color:var(--success)}
+.send-btn, .action-btn{background:linear-gradient(135deg,var(--aurora),#5a9cff);border:0;color:var(--cosmos);padding:12px 16px;border-radius:10px;font-weight:600;cursor:pointer;transition:all .2s}
+.send-btn:hover, .action-btn:hover{box-shadow:0 0 20px rgba(134,183,255,.4)}
 
 .control-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px}
 .control-btn{background:rgba(134,183,255,.15);border:1px solid rgba(134,183,255,.3);color:var(--moon);padding:12px;border-radius:10px;cursor:pointer;font-weight:500;font-size:.9rem;transition:all .2s}
@@ -110,11 +103,9 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
       <h1>GERONIMO</h1>
     </div>
     <nav class="nav">
-      <li><a href="#" data-page="chat" class="nav-link active">Chat</a></li>
-      <li><a href="tasks.html" class="nav-link">Tasks</a></li>
-      <li><a href="algorithms.html" class="nav-link">Blueprint</a></li>
-      <li><a href="pc-control.html" class="nav-link">PC Control</a></li>
-      <li><a href="settings.html" class="nav-link">Settings</a></li>
+      <li><a class="nav-link active" data-page="chat">Chat</a></li>
+      <li><a class="nav-link" data-page="capabilities">Blueprint</a></li>
+      <li><a class="nav-link" data-page="settings">Settings</a></li>
     </nav>
   </aside>
 
@@ -128,6 +119,7 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
     </header>
 
     <div class="content">
+      <!-- CHAT PANEL -->
       <div class="panel active" data-page="chat">
         <div class="card">
           <h2>Talk to Geronimo</h2>
@@ -144,11 +136,11 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
         </div>
       </div>
 
+      <!-- BLUEPRINT / CAPABILITIES PANEL -->
       <div class="panel" data-page="capabilities">
         <div class="card">
           <h2>AI Capabilities</h2>
           <p>Explore what Geronimo can do for you on your computer and online.</p>
-          <a href="algorithms.html" target="_blank">View full AI blueprint →</a>
         </div>
 
         <div class="card">
@@ -185,6 +177,7 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
         </div>
       </div>
 
+      <!-- SETTINGS PANEL -->
       <div class="panel" data-page="settings">
         <div class="card">
           <h2>Settings</h2>
@@ -216,6 +209,25 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
           </div>
         </div>
       </div>
+
+      <!-- LOGIN PANEL -->
+      <div class="panel" data-page="login">
+        <div class="card" style="max-width: 400px; margin: 40px auto;">
+          <h2>Sign In to Geronimo</h2>
+          <form id="login-form">
+            <div class="form-group">
+              <label for="login-email">Email Address</label>
+              <input type="email" id="login-email" class="form-input" placeholder="admin@example.com" required />
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" class="form-input" placeholder="••••••••" required />
+            </div>
+            <button type="submit" class="action-btn" style="width: 100%;">Sign In</button>
+          </form>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
@@ -224,7 +236,52 @@ body{background:radial-gradient(circle at 50% 45%,#1b1237,var(--cosmos) 70%) fix
 const msg = document.getElementById('chat-messages');
 const input = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const userBadge = document.getElementById('user-badge');
+const loginForm = document.getElementById('login-form');
 
+// Function to switch visible panels
+function showPage(pageName) {
+  document.querySelectorAll('.panel').forEach(panel => {
+    if (panel.getAttribute('data-page') === pageName) {
+      panel.classList.add('active');
+    } else {
+      panel.classList.remove('active');
+    }
+  });
+
+  document.querySelectorAll('.nav-link').forEach(link => {
+    if (link.getAttribute('data-page') === pageName) {
+      link.classList.add('active');
+    } else {
+      link.classList.remove('active');
+    }
+  });
+}
+
+// Sidebar Navigation
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', () => {
+    const page = link.getAttribute('data-page');
+    if (page) showPage(page);
+  });
+});
+
+// Sign Out / Sign In flow
+logoutBtn.addEventListener('click', () => {
+  showPage('login');
+});
+
+loginForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const emailInput = document.getElementById('login-email').value;
+  if (emailInput) {
+    userBadge.textContent = 'User: ' + emailInput;
+  }
+  showPage('chat');
+});
+
+// Chat Interface Flow
 function addMessage(text, type = 'ai') {
   const el = document.createElement('div');
   el.className = 'message ' + type;
@@ -238,7 +295,7 @@ sendBtn.addEventListener('click', () => {
   if (!value) return;
   addMessage(value, 'user');
   input.value = '';
-  setTimeout(() => addMessage('I can help with that. This is a prototype dashboard flow for Geronimo.', 'ai'), 200);
+  setTimeout(() => addMessage('I can help with that. This is a prototype dashboard flow for Geronimo.', 'ai'), 300);
 });
 
 input.addEventListener('keydown', e => {
@@ -248,58 +305,10 @@ input.addEventListener('keydown', e => {
   }
 });
 
+// Settings Toggles
 document.querySelectorAll('.toggle').forEach(toggle => {
   toggle.addEventListener('click', () => toggle.classList.toggle('on'));
-});
-
-document.querySelectorAll('.nav-link').forEach(link => {
-  link.addEventListener('click', e => {
-    if (link.getAttribute('href') === '#') {
-      e.preventDefault();
-    }
-    document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active'));
-    link.classList.add('active');
-  });
 });
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
